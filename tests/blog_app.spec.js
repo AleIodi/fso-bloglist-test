@@ -22,15 +22,17 @@ test.describe('Blog app', () => {
 	})
 
 	test('Login form is shown', async ({ page }) => {
-		const locator = page.getByText('log in to application')
-		await expect(locator).toBeVisible()
+		await page.getByRole('link', { name: 'login' }).click()
+		await expect(page.getByLabel('username')).toBeVisible()
+		await expect(page.getByLabel('password')).toBeVisible()
+		await expect(page.getByRole('button', { name: 'login' })).toBeVisible()
 	})
 
 	test.describe('Login', () => {
 		test('succeeds with correct credentials', async ({ page }) => {
 			await loginWith(page, 'mluukkai', 'salainen')
 
-			await expect(page.getByText('Matti Luukkainen logged in')).toBeVisible()
+			await expect(page.getByRole('button', { name: 'Logout' })).toBeVisible()
 		})
 
 		test('fails with wrong credentials', async ({ page }) => {
@@ -49,13 +51,13 @@ test.describe('Blog app', () => {
 		test('a new blog can be created', async ({ page }) => {
 			await newBlogWith(page, 'test', 'creation', 'new blog')
 
-			await expect(page.getByText('test creation view')).toBeVisible()
+			await expect(page.getByText('test creation')).toBeVisible()
 		})
 
 		test('a blog can be liked', async ({ page }) => {
 			await newBlogWith(page, 'test', 'creation', 'new blog')
 
-			await page.getByRole('button', { name: 'view' }).click()
+			await page.getByRole('link', { name: 'test creation' }).click()
 			await expect(page.getByText('likes 0')).toBeVisible()
 
 			await page.getByRole('button', { name: 'like' }).click()
@@ -65,7 +67,7 @@ test.describe('Blog app', () => {
 		test('the user who added the blog can delete it', async ({ page }) => {
 			await newBlogWith(page, 'test', 'creation', 'new blog')
 
-			await page.getByRole('button', { name: 'view' }).click()
+			await page.getByRole('link', { name: 'test creation' }).click()
 			await expect(page.getByText('Matti Luukkainen', { exact: true })).toBeVisible()
 
 			page.on('dialog', async dialog => {
@@ -73,18 +75,18 @@ test.describe('Blog app', () => {
 			})
 
 			await page.getByRole('button', { name: 'delete' }).click()
-			await expect(page.getByText('test creation view')).not.toBeVisible()
+			await expect(page.getByText('test creation')).not.toBeVisible()
 		})
 
 		test('only the user who created the blog can delete it', async ({ page }) => {
 			await newBlogWith(page, 'test', 'creation', 'new blog')
-			await page.getByRole('button', { name: 'view' }).click()
+			await page.getByRole('link', { name: 'test creation' }).click()
 			await expect(page.getByRole('button', { name: 'delete' })).toBeVisible()
 
 			await page.getByRole('button', { name: 'logout' }).click()
 
 			await loginWith(page, 'super', 'super')
-			await page.getByRole('button', { name: 'view' }).click()
+			await page.getByRole('link', { name: 'test creation' }).click()
 			await expect(page.getByRole('button', { name: 'delete' })).not.toBeVisible()
 		})
 
